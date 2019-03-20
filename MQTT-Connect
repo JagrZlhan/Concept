@@ -1,0 +1,18 @@
+MQTT Client to Broker
+
+CONNECT:
+  连接的建立由 Client 端发起，Client 端首先向 Broker 发送一个 CONNECT 数据包（先略过固定头）
+  -可变头：
+  --协议名称 Protocol Name
+  --协议版本 Protocol Level
+  --用户名标识 User Name Flag
+  --密码标识 Password Flag
+  --遗愿消息 Will Retain
+  --遗愿消息QOS标识 Will QOS
+  --遗愿标识 Will Flag
+  --会话清除标识 Clean Session 标识Client是否建立一个持久化的会话
+  --连接保活 Keep Alive 设置一个单位为秒的时间间隔 
+     Client和Broker之间在这个时间间隔之内需要至少有一次消息交互，否则认为连接已经断开
+ 
+  -消息体
+  
