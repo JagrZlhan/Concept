@@ -1,8 +1,13 @@
 MQTT Client to Broker
 
+Process:
+  1. Client-----CONNECT----->Broker
+  2. Broker-----CONNACK----->Client
+
 CONNECT:
-  连接的建立由 Client 端发起，Client 端首先向 Broker 发送一个 CONNECT 数据包（先略过固定头）
-  -可变头：
+  连接的建立由 Client 端发起，Client 端首先向 Broker 发送一个 CONNECT 数据包（先略过固定头 Fixed Header）
+  
+  -可变头 Variable Header：
   --协议名称 Protocol Name
   --协议版本 Protocol Level
   --用户名标识 User Name Flag
@@ -11,8 +16,43 @@ CONNECT:
   --遗愿消息QOS标识 Will QOS
   --遗愿标识 Will Flag
   --会话清除标识 Clean Session 标识Client是否建立一个持久化的会话
+     标识为0，标识Client希望建立一个持久会话的连接，Broker将存储该Client订阅的主题和未接受的消息
+            否则Broker不会存储这些数据，同时在建立连接时清除这个Client之前存在的持久化会话所保存的数据
   --连接保活 Keep Alive 设置一个单位为秒的时间间隔 
      Client和Broker之间在这个时间间隔之内需要至少有一次消息交互，否则认为连接已经断开
  
-  -消息体
-  
+  -消息体 Payload:
+  --客户端标识符 Client Identifier 标识Client身份，1-23字节，数字和26个大小写字母
+        使用UUID或Android设备的DEVICE_ID，允许为空，Broker会分配一个内部唯一的Identifier
+  --用户名 Username 如果可变头中的用户名标识为1，消息体会包含用户名字段，Broker用用户名和密码对Client验证
+        只允许已授权的Client接入
+  **不同的Client需要使用不同的Identifier，但是可以使用同样的用户名和密码连接
+  --密码 Password 如果可变头中的密码标识为1，消息体会包含密码字段
+  --遗愿主题 Will Topic 如果可变头中遗愿标识为1，消息体会包含遗愿主题
+        当Client非正常地中断连接，Broker将向指定的遗愿主题发布遗愿消息
+  --遗愿消息 Will Message 如果可变头中的遗愿标识为1，消息体包含遗愿消息
+        当Client非正常地中断连接，Broker将向指定的遗愿主题发布由该字段指定的内容
+ 
+CONNACK:
+    Broker收到Client的CONNECT数据包之后，将检查并校验CONNECT数据包的内容，之后回复Client一个CONNACK数据包
+    
+    -可变头 Variable Header
+    --会话存在标识 Session Present Flag 用于标识Broker上，是否已存在该Client的持久性会话，0/1
+        当会话清除标识为0，则此标识始终为0；
+        当会话清除标识为1，则此标识在有持久性会话的情况下为1，否则为0
+        **3.1.1版本新加入
+    --连接返回码 Connect Return Code 用于标识Client对Broker 的连接是否成功
+        Return Code连接状态
+        0：连接建立
+        1：拒绝，不允许的协议版本
+        2：拒绝，Client Identifier被拒绝
+        3：拒绝，服务器不可用
+        4：拒绝，错误的用户名或密码
+        5：拒绝，未授权
+        **4表示用户名或密码格式不正确，实际上大部分实现中，错误的用户名和密码，返回值也是4
+        **5一般在Broker只使用IP地址或Identifier进行验证时使用
+        **2表示Identifier格式不规范
+       
+    -消息体 Payload
+    CONNACK没有消息体
+      
