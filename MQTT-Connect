@@ -1,6 +1,6 @@
 MQTT Client to Broker
 
-Process:
+Connect Process:
   1. Client-----CONNECT----->Broker
   2. Broker-----CONNACK----->Client
 
@@ -55,4 +55,19 @@ CONNACK:
        
     -消息体 Payload
     CONNACK没有消息体
-      
+
+Disconnect Process:
+    -Client主动关闭连接：
+      Client向Broker发送一个DISCONNECT数据包即可
+      DISCONNECT数据包无可变头和消息体
+      Client发送完之后，即可关闭底层的TCP连接，无需等待Broker的回复，Broker也不会回复
+      目的：Broker需要判断Client是否是正常断开连接
+            如正常，则会丢弃当前连接指定的遗愿消息
+            如不正常，则会向指定的遗愿主题发布遗愿消息
+    
+     -Broker主动关闭连接
+        MQTT协议规定Broker在没有收到Client的DISCONNECT数据包之前都应该保持和Client连接
+        只有Broker在Keep Alive的时间间隔里，没有收到Client的任何数据包的时候会主动关闭
+        一些Broker也可以拓展实现连接管理，主动断开某个Client的连接
+        Broker直接关闭底层的TCP连接，不会向Client发送任何MQTT数据包
+    
