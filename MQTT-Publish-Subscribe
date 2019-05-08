@@ -1,0 +1,40 @@
+订阅与发布
+
+MQTT协议的订阅与发布基于主题Topic
+
+Typical Process:
+  -ClientA连接到Broker
+  -ClientB连接到Broker，订阅主题Topic1
+  -ClientA发送给Broker一条消息，主题为Topic1
+  -Broker收到ClientA的消息，发现ClientB订阅了Topic1，将消息转发给ClientB
+  -ClientB从Broker接收到该消息
+  **与传统队列不同，如果ClientB在ClientA发布消息之后再订阅Topic1，ClientB不会收到该消息
+  
+  MQTT通过订阅喝发布模型对消息的发布者和订阅者进行解耦
+  发布者在发布消息时并不需要订阅方也连接到Broker
+  订阅方订阅过相关主题，则其在连接到Broker之后就可以收到发布方在它离线期间发布的消息-"离线消息"
+  接收离线的消息需要Client使用持久性会话，且发布时消息的QoS大于1
+  
+  Publisher/Subscriber:
+  相对于Topic的身份
+  Publisher: 向某个Topic发布消息的Client
+  Subscriber: 订阅了某个Topic的Client
+  
+  Sender/Receiver:
+  相对于消息传输方向的身份
+  Sender：发送消息的一方
+  Receiver：接收消息的一方
+  
+PUBLISH数据包：
+  用于Sender和Receiver之间传输消息数据
+  当Publisher要向某个Topic发布一条消息的时候，Publisher会向Broker发送一个PUBLISH
+  当Broker要将一条消息转发给订阅了某条主题的Subscriber的时候，Broker也会向Subscriber发送一条PUBLISH
+    
+  -固定头：
+  --消息重复标识 DUP flag
+      1bit，0/1，当DUP flag=1的时候，代表该消息是重发消息，因Receiver没有确认收到之前的消息而重新发送的
+      *此标识只在QoS大于0的消息中使用
+  --QoS 
+      2bit，0/1/2，代表PUBLISH消息的QoS level
+  --Retain标识 Retain flag
+      1bit，0/1，在Client发送到Broker的PUBLISH消息中被设为1的时候，Broker应该保存该条消息
